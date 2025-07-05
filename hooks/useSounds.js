@@ -10,7 +10,15 @@ import { createAudioPlayer, PLAYBACK_STATUS_UPDATE } from "expo-audio";
  */
 export default function useSounds(remoteAudioUrls = []) {
   const [urlSoundPlayers, setUrlSoundPlayers] = useState([]);
-  const [isLoadedStatuses, setIsLoadedStatuses] = useState([]);
+  const [isLoadedStatuses, setIsLoadedStatuses] = useState(
+    Array(remoteAudioUrls.length).fill(false)
+  );
+  const [isPlayingStatuses, setIsPlayingStatuses] = useState(
+    Array(remoteAudioUrls.length).fill(false)
+  );
+  const [playedOnceStatuses, setPlayedOnceStatuses] = useState(
+    Array(remoteAudioUrls.length).fill(false)
+  );
   const loadedCount = isLoadedStatuses.filter(Boolean).length;
 
   // Cleanup helper
@@ -25,40 +33,37 @@ export default function useSounds(remoteAudioUrls = []) {
 
   // Load remote urls
   useEffect(() => {
-    // Initialize the status array with the correct length
-    setIsLoadedStatuses(Array(remoteAudioUrls.length).fill(false));
+    const players = remoteAudioUrls.map((url, index) => {
+      const player = createAudioPlayer({ uri: url });
+      player.addListener(PLAYBACK_STATUS_UPDATE, (status) => {
+        console.log("STATUS_UPDATE:", status);
 
-    const players = [];
-    const loadPromises = remoteAudioUrls.map(
-      (url, index) =>
-        new Promise((resolve) => {
-          const player = createAudioPlayer({ uri: url });
-          players.push(player);
+        // Update loaded status
+        setIsLoadedStatuses((prev) => {
+          const newStatuses = [...prev];
+          newStatuses[index] = status.isLoaded;
+          return newStatuses;
+        });
 
-          // Add listener to update loading status
-          let sub = player.addListener(PLAYBACK_STATUS_UPDATE, (status) => {
-            console.log("STATUS_UPDATE:", status);
-            if (status.isLoaded) {
-              resolve(player);
-              sub.remove();
-            }
-          });
-        })
-    );
+        // Update playing status
+        setIsPlayingStatuses((prev) => {
+          const newStatuses = [...prev];
+          newStatuses[index] = status.playing;
+          return newStatuses;
+        });
 
-    Promise.all(loadPromises).then((loadedPlayers) => {
-      setUrlSoundPlayers(loadedPlayers);
-      loadedPlayers.forEach((player, index) => {
-        // Permantent listener
-        player.addListener(PLAYBACK_STATUS_UPDATE, (status) => {
-          setIsLoadedStatuses((prev) => {
+        // If it's playing, also mark it as played at least once
+        if (status.playing) {
+          setPlayedOnceStatuses((prev) => {
             const newStatuses = [...prev];
-            newStatuses[index] = status.isLoaded;
+            newStatuses[index] = true;
             return newStatuses;
           });
-        });
+        }
       });
+      return player;
     });
+    setUrlSoundPlayers(players);
 
     return () => cleanup(players);
   }, [remoteAudioUrls.join(",")]);
@@ -71,33 +76,14 @@ export default function useSounds(remoteAudioUrls = []) {
    * @param onPlaybackStatusUpdate  – called on every status update
    * @returns a function to call when you want to remove the listener
    */
-  const playSound = (
-    player,
-    volume = 1,
-    onPlaybackStatusUpdate = undefined
-  ) => {
-    console.log("playSound");
+  const playSound = (player) => {
+    console.log("playSound", player);
     try {
-      if (volume !== undefined) {
-        player.volume = volume;
-      }
-
       let unsubscribe;
       console.log("BEFORE onPlaybackStatusUpdate");
-      if (onPlaybackStatusUpdate) {
-        const sub = player.addListener(
-          Audio.PLAYBACK_STATUS_UPDATE,
-          (status) => {
-            console.log("PLAYING:", status);
-            onPlaybackStatusUpdate(status);
-          }
-        );
-        unsubscribe = () => sub.remove();
-      }
-      player && player.seekTo(0);
+      player && player.isLoaded && player.seekTo(0);
       console.log("BEFORE PLAY", player);
-      player && player.play();
-
+      player && player.isLoaded && player.play();
       return unsubscribe;
     } catch (err) {
       console.error("playSound error", err);
@@ -109,5 +95,7 @@ export default function useSounds(remoteAudioUrls = []) {
     playSound,
     loadedCount,
     isLoadedStatuses,
+    isPlayingStatuses,
+    playedOnceStatuses,
   };
 }

@@ -1,50 +1,60 @@
-# Welcome to your Expo app 👋
+# Expo Audio Demo App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native application built with Expo that demonstrates audio loading and playback functionality with comprehensive status tracking.
 
-## Get started
+## Features
 
-1. Install dependencies
+- Loading and playing audio files from remote URLs
+- Real-time tracking of multiple status indicators:
+  - Loaded status (green/red)
+  - Currently playing status (orange/gray)
+  - Played at least once status (purple/gray)
+- "Play All" button to play all loaded sounds simultaneously
+- Visual loading progress indicator
+- Componentized UI with reusable elements
 
-   ```bash
-   npm install
-   ```
+## Project Structure
 
-2. Start the app
+- `app/index.tsx` - Main application screen
+- `hooks/useSounds.js` - Custom hook for audio management
+- `data/sample.js` - Sample audio URLs
+- `components/` - Reusable UI components:
+  - `StatusIndicator.tsx` - Individual status display
+  - `SoundTile.tsx` - Container for sound buttons with status indicators
 
-   ```bash
-   npx expo start
-   ```
+## Getting Started
 
-In the output, you'll find options to open the app in a
+### Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node.js and npm installed
+- Expo CLI (`npm install -g expo-cli`)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### Installation
 
 ```bash
-npm run reset-project
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Scan the QR code with the Expo Go app on your mobile device or run on a simulator.
 
-## Learn more
+## Usage
 
-To learn more about developing your project with Expo, look at the following resources:
+When you launch the app:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. Audio files will begin loading automatically
+2. The progress bar shows loading status
+3. Click individual sound tiles to play them
+4. Once all sounds are loaded, you can use the "Play All Sounds" button
+5. Watch the status indicators change as sounds load and play
 
-## Join the community
+## Technologies Used
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- React Native
+- Expo
+- expo-audio library
+- TypeScript
+- React Hooks for state management

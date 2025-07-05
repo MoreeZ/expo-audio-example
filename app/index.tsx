@@ -1,17 +1,24 @@
 import { Pressable, Text, View } from "react-native";
+import { default as SoundTile } from "../components/SoundTile";
 import useSounds from "../hooks/useSounds";
 
 import { SAMPLE_DATA } from "../data/sample";
 import { AudioPlayer } from "expo-audio";
-import { useEffect } from "react";
 
 export default function Index() {
-  const { urlSoundPlayers, playSound, loadedCount, isLoadedStatuses } = useSounds(SAMPLE_DATA);
-  
+  const {
+    urlSoundPlayers,
+    playSound,
+    loadedCount,
+    isLoadedStatuses,
+    isPlayingStatuses,
+    playedOnceStatuses,
+  } = useSounds(SAMPLE_DATA);
+
   const handlePress = (player: AudioPlayer, index: number) => {
     playSound(player);
   };
-  
+
   const handlePlayAll = () => {
     urlSoundPlayers.forEach((player) => {
       playSound(player);
@@ -26,14 +33,14 @@ export default function Index() {
     >
       <Pressable
         style={{
-          backgroundColor: '#3498db',
+          backgroundColor: "#3498db",
           paddingVertical: 15,
           paddingHorizontal: 30,
           borderRadius: 8,
-          alignSelf: 'center',
+          alignSelf: "center",
           marginTop: 15,
           marginBottom: 5,
-          shadowColor: '#000',
+          shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.2,
           shadowRadius: 3,
@@ -42,7 +49,7 @@ export default function Index() {
         onPress={handlePlayAll}
         disabled={loadedCount !== SAMPLE_DATA.length}
       >
-        <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+        <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>
           Play All Sounds
         </Text>
       </Pressable>
@@ -105,40 +112,20 @@ export default function Index() {
           flexWrap: "wrap",
           justifyContent: "space-around",
           padding: 5,
+          overflowY: "scroll",
+          flex: 1,
         }}
       >
         {urlSoundPlayers.map((player, index) => (
-          <Pressable
-            style={{
-              width: 80,
-              height: 80,
-              margin: 8,
-              backgroundColor: "#555",
-              borderRadius: 8,
-              justifyContent: "center",
-              alignItems: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.2,
-              shadowRadius: 2,
-              elevation: 3,
-            }}
+          <SoundTile
             key={index}
-            onPress={() => {
-              handlePress(player, index);
-            }}
-          >
-            <Text style={{ color: "white", fontWeight: "bold" }}>
-              {index + 1}
-            </Text>
-            <Text
-              style={{
-                backgroundColor: isLoadedStatuses[index] ? "green" : "red",
-              }}
-            >
-              isLoaded: {isLoadedStatuses[index] ? "true" : "false"}
-            </Text>
-          </Pressable>
+            index={index}
+            player={player}
+            isLoaded={isLoadedStatuses[index] || false}
+            isPlaying={isPlayingStatuses[index] || false}
+            playedOnce={playedOnceStatuses[index] || false}
+            onPress={handlePress}
+          />
         ))}
       </View>
     </View>
