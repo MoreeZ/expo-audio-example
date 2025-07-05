@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { createAudioPlayer } from "expo-audio";
+import { createAudioPlayer, PLAYBACK_STATUS_UPDATE } from "expo-audio";
 
 /**
  * Custom hook to load and manage local, URL, and remote-id audio using expo-audio.
@@ -8,11 +8,10 @@ import { createAudioPlayer } from "expo-audio";
  * @param localAudioPaths - Local asset paths (require or string)
  * @param remoteAudioUrls - Direct URL strings
  */
-export default function useSounds(
-  remoteAudioUrls = []
-) {
+export default function useSounds(remoteAudioUrls = []) {
   const [urlSoundPlayers, setUrlSoundPlayers] = useState([]);
-  const [loadedCount, setLoadedCount] = useState(0);
+  const [isLoadedStatuses, setIsLoadedStatuses] = useState([]);
+  const loadedCount = isLoadedStatuses.filter(Boolean).length;
 
   // Cleanup helper
   const cleanup = useCallback((soundPlayers) => {
@@ -26,28 +25,39 @@ export default function useSounds(
 
   // Load remote urls
   useEffect(() => {
+    // Initialize the status array with the correct length
+    setIsLoadedStatuses(Array(remoteAudioUrls.length).fill(false));
+
     const players = [];
     const loadPromises = remoteAudioUrls.map(
-      (url) =>
+      (url, index) =>
         new Promise((resolve) => {
-          const player = createAudioPlayer({ uri: url }, );
+          const player = createAudioPlayer({ uri: url });
           players.push(player);
-          const sub = player.addListener(
-            Audio.PLAYBACK_STATUS_UPDATE,
-            (status) => {
-              console.log("LOADING:", status);
-              if (status.isLoaded) {
-                setLoadedCount((c) => c + 1);
-                sub.remove();
-                resolve(player);
-              }
+
+          // Add listener to update loading status
+          let sub = player.addListener(PLAYBACK_STATUS_UPDATE, (status) => {
+            console.log("STATUS_UPDATE:", status);
+            if (status.isLoaded) {
+              resolve(player);
+              sub.remove();
             }
-          );
+          });
         })
     );
 
     Promise.all(loadPromises).then((loadedPlayers) => {
       setUrlSoundPlayers(loadedPlayers);
+      loadedPlayers.forEach((player, index) => {
+        // Permantent listener
+        player.addListener(PLAYBACK_STATUS_UPDATE, (status) => {
+          setIsLoadedStatuses((prev) => {
+            const newStatuses = [...prev];
+            newStatuses[index] = status.isLoaded;
+            return newStatuses;
+          });
+        });
+      });
     });
 
     return () => cleanup(players);
@@ -61,7 +71,11 @@ export default function useSounds(
    * @param onPlaybackStatusUpdate  – called on every status update
    * @returns a function to call when you want to remove the listener
    */
-  const playSound = (player, volume = 1, onPlaybackStatusUpdate = null) => {
+  const playSound = (
+    player,
+    volume = 1,
+    onPlaybackStatusUpdate = undefined
+  ) => {
     console.log("playSound");
     try {
       if (volume !== undefined) {
@@ -73,7 +87,7 @@ export default function useSounds(
       if (onPlaybackStatusUpdate) {
         const sub = player.addListener(
           Audio.PLAYBACK_STATUS_UPDATE,
-          (status)=>{
+          (status) => {
             console.log("PLAYING:", status);
             onPlaybackStatusUpdate(status);
           }
@@ -94,5 +108,6 @@ export default function useSounds(
     urlSoundPlayers,
     playSound,
     loadedCount,
+    isLoadedStatuses,
   };
 }
