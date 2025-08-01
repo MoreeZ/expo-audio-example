@@ -5,7 +5,7 @@ import { default as StatusIndicator } from "./StatusIndicator";
 
 interface SoundTileProps {
   index: number;
-  player: AudioPlayer;
+  player: AudioPlayer | null;
   isLoaded: boolean;
   isPlaying: boolean;
   playedOnce: boolean;
@@ -24,10 +24,21 @@ export const SoundTile = ({
   playedOnce,
   onPress,
 }: SoundTileProps) => {
+  const isDownloading = !player;
+  
   return (
-    <Pressable style={styles.container} onPress={() => onPress(player, index)}>
+    <Pressable 
+      style={[styles.container, isDownloading && styles.downloading]} 
+      onPress={() => player && onPress(player, index)}
+      disabled={!player}
+    >
       <Text style={styles.indexText}>{index + 1}</Text>
       <View style={styles.statusContainer}>
+        <StatusIndicator
+          label="Downloading"
+          isActive={isDownloading}
+          activeColor="#3498db"
+        />
         <StatusIndicator
           label="Loaded"
           isActive={isLoaded}
@@ -51,7 +62,7 @@ export const SoundTile = ({
 const styles = StyleSheet.create({
   container: {
     width: 80,
-    minHeight: 80, // Use minHeight instead of fixed height
+    minHeight: 80,
     margin: 8,
     backgroundColor: "#555",
     borderRadius: 8,
@@ -62,7 +73,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 3,
-    paddingVertical: 8, // Add padding to ensure content fits
+    paddingVertical: 8,
+  },
+  downloading: {
+    backgroundColor: "#777",
+    opacity: 0.7,
   },
   indexText: {
     color: "white",

@@ -121,10 +121,10 @@ export default function Index() {
             key={index}
             index={index}
             player={player}
-            isLoaded={isLoadedStatuses[index] || false}
+            isLoaded={player ? (isLoadedStatuses[index] || false) : false}
             isPlaying={isPlayingStatuses[index] || false}
             playedOnce={playedOnceStatuses[index] || false}
-            onPress={handlePress}
+            onPress={player ? handlePress : () => {}}
           />
         ))}
       </View>
